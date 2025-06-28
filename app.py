@@ -4,28 +4,20 @@ import os
 
 app = Flask(__name__)
 
-# Usa tu API Key desde Render (variable de entorno)
+# Usa tu clave desde las variables de entorno en Render
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 @app.route("/voice", methods=["POST"])
 def voice():
-    # Intenta leer lo que dijo el cliente (si ya habló)
     speech = request.form.get("SpeechResult", "")
     if not speech:
         speech = "Inicia la conversación como asistente de Frutalia MID."
 
-    # Pregunta a ChatGPT
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
-            {
-                "role": "system",
-                "content": "Eres un agente de ventas amable de Frutalia MID. Saluda, presenta los jugos naturales que ofrecemos y ofrece responder dudas o tomar pedidos por llamada."
-            },
-            {
-                "role": "user",
-                "content": speech
-            }
+            {"role": "system", "content": "Eres un agente de ventas de Frutalia MID. Saluda, presenta los jugos naturales y ofrece tomar pedidos."},
+            {"role": "user", "content": speech}
         ]
     )
 
