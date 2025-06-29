@@ -1,37 +1,28 @@
-from flask import Flask, request, Response
 import openai
+from openai import OpenAI
+from flask import Flask, request, Response
 import os
 
 app = Flask(__name__)
-
-# Usa tu clave desde las variables de entorno en Render
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 @app.route("/voice", methods=["POST"])
 def voice():
-    speech = request.form.get("SpeechResult", "")
-    if not speech:
-        speech = "Inicia la conversación como asistente de Frutalia MID."
+    prompt_usuario = "Actúa como un asistente telefónico amable de Frutalia MID. Saluda y ofrece información de jugos naturales."
 
-    response = openai.ChatCompletion.create(
+    respuesta = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "Eres un agente de ventas de Frutalia MID. Saluda, presenta los jugos naturales y ofrece tomar pedidos."},
-            {"role": "user", "content": speech}
+            {"role": "system", "content": "Eres un asistente telefónico de Frutalia MID."},
+            {"role": "user", "content": prompt_usuario}
         ]
     )
 
-    respuesta_ia = response.choices[0].message.content.strip()
+    mensaje = respuesta.choices[0].message.content.strip()
 
     twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Say voice="alice" language="es-MX">{respuesta_ia}</Say>
-    <Pause length="2"/>
-    <Redirect>/voice</Redirect>
+    <Say voice="alice" language="es-MX">{mensaje}</Say>
 </Response>"""
 
     return Response(twiml, mimetype="text/xml")
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
